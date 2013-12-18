@@ -12,10 +12,10 @@ version Dtest::VERSION
 
 testSuiteName = ""
 
-desc 'Generates a testsuite'
+desc 'Generates a testsuite "NAME"'
 arg_name 'NAME'
 command :make do |c|
-  c.desc 'To generate a .dpr file'
+  c.desc 'Also generates a .dpr file'
   c.switch :p
 
   c.action do |global_options,options,args|
@@ -75,7 +75,7 @@ command :make do |c|
   end
 end
 
-desc 'Initializes an empty testsuite'
+desc 'Initializes an empty testsuite "NAME"'
 arg_name 'NAME'
 command :init do |c|
   c.action do |global_options,options,args|
