@@ -1,0 +1,6 @@
+= dtest
+
+Describe your project here
+
+:include:dtest.rdoc
+

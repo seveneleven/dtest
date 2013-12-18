@@ -1,0 +1,121 @@
+#!/usr/bin/env ruby
+require 'gli'
+require 'dtest'
+
+include GLI::App
+
+program_desc 'automatically generates dunit testsuites and projects'
+
+templatesPath = "#{File.dirname(__FILE__)}/../templates"
+
+version Dtest::VERSION
+
+testSuiteName = ""
+
+desc 'Generates a testsuite'
+arg_name 'NAME'
+command :make do |c|
+  c.desc 'To generate a .dpr file'
+  c.switch :p
+
+  c.action do |global_options,options,args|
+	
+ #   testSuite = args.first;	
+ #   if testSuite == nil 
+ #     testSuite = ""
+ #   end
+	  testSuiteFilename = "#{testSuiteName}.testsuite";
+
+    unless File.exists?("#{testSuiteFilename}")
+      raise "A testsuite '#{testSuiteFilename}' does not exist. Run 'init' to create one."
+    end
+
+    
+    testSuite = TestSuite.new
+    testSuite.read(testSuiteFilename)
+    
+    if testSuite.lines.count > 0
+
+      # Generate the TestSuite.pas
+      usesFiles = ""
+      testSuite.units.each { |unit|
+        unit.chomp!
+        unit.gsub!(".pas", "")
+        usesFiles = usesFiles + ",\n     #{unit}"
+      }
+
+      testClasses = ""
+      testSuite.classes.each { |testClass|
+        testClasses = testClasses + "\n  Result.AddSuite(#{testClass}.Suite);"
+      }
+
+      filename = "#{testSuiteName}TestSuite.pas"
+
+      fileGenerator = FileGenerator.new
+      fileGenerator.addValue("name", testSuiteName)
+      fileGenerator.addValue("usesFiles", usesFiles)
+      fileGenerator.addValue("testSuites", testClasses)
+
+      fileGenerator.templateFilename = "#{templatesPath}/testsuite.tpl"
+      fileGenerator.generate(filename)
+      puts "generated testsuite #{filename}."
+
+      if options[:p]
+        # Generate the project file
+        filename = "#{testSuiteName}TestProject.dpr"
+        fileGenerator.reset
+        fileGenerator.addValue("name", testSuiteName)
+
+        fileGenerator.templateFilename = "#{templatesPath}/testproject.tpl"
+        fileGenerator.generate(filename)
+
+        puts "generated testproject '#{filename}'"
+      end 
+    end
+  end
+end
+
+desc 'Initializes an empty testsuite'
+arg_name 'NAME'
+command :init do |c|
+  c.action do |global_options,options,args|
+    
+    testSuiteFilename = "#{testSuiteName}.testsuite";
+
+    unless File.exists?(testSuiteFilename)
+      testSuiteFile = File.open(testSuiteFilename, "w")
+      testSuiteFile.close
+      puts "Initialized empty testsuite in '#{testSuiteFilename}'"
+    else
+      puts "A testsuite '#{testSuiteFilename}' already exists" 
+    end
+  end
+end
+
+
+pre do |global,command,options,args|
+  # Pre logic here
+  # Return true to proceed; false to abort and not call the
+  # chosen command
+  # Use skips_pre before a command to skip this block
+  # on that command only
+  if args.first != nil
+    testSuiteName = args.first
+  end
+  
+  true
+end
+
+post do |global,command,options,args|
+  # Post logic here
+  # Use skips_post before a command to skip this
+  # block on that command only
+end
+
+on_error do |exception|
+  # Error logic here
+  # return false to skip default error handling
+  true
+end
+
+exit run(ARGV)
