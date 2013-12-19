@@ -1,6 +1,17 @@
 = dtest
 
-Describe your project here
+dtest automatically generates Delphi (DUnit) testsuites based on +.testsuite+ 
+configurations.
+
+For example, running 
+ dtest make MyTests 
+given a +MyTests.testsuite+ with content like this:
+ TTestClass1:TestClass1.pas
+ TTestClass2:TestClass2.pas 
+will make a +MyTestsTestSuite.pas+ including the dependent Delphi units and 
+generated code to register the test classes. Optionally, a +.dpr+ will be created.  
+
+= CLI Documentation
 
 :include:dtest.rdoc
 
